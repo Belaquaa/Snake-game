@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #1e1e1e;
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+        }
+
+        #game-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #game-board {
+            position: relative;
+            background-color: #333333;
+            border: 1px solid #666666;
+        }
+
+        #score {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            font-size: 18px;
+        }
+
+        #max-score {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 18px;
+        }
+
+        #game-over {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ff3333;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        #game-over button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #ffffff;
+            color: #ff3333;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #game-start {
+            color: #00ff00;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div id="game-container">
+    <div id="game-start">Нажмите ENTER для начала игры</div>
+    <div id="game-over">
+        Game Over!<br>
+        Нажмите кнопку ниже для начала новой игры<br>
+        <button onclick="startGame()">Начать новую игру</button>
+    </div>
+    <div id="game-board" width="480" height="480">
+        <canvas id="game-board-canvas" width="480" height="480"></canvas>
+        <div id="score">Score: 0</div>
+        <div id="max-score">Best: 0</div>
+    </div>
+</div>
+
+<script>
+    let canvas = document.getElementById("game-board-canvas");
+    let ctx = canvas.getContext("2d");
+    let boardWidth = 24;  // Increase the size for better visibility
+    let boardHeight = 24; // Increase the size for better visibility
+    let tileSize = canvas.width / boardWidth;
+
+    let direction = {x: 1, y: 0};
+    let snake = [{x: 12, y: 12}, {x: 11, y: 12}, {x: 10, y: 12}];
+    let food = generateFood();
+    let score = 0;
+    let maxScore = 0;
+    let gameInterval;
+    let gameSpeed = 140;
+    const initialGameSpeed = gameSpeed;
+    const maxSpeedIncrease = initialGameSpeed * 0.3; // Maximum +30% of initial speed
+    let gameStarted = false;
+    let nextDirection = null;
+
+    async function fetchConfig() {
+        const response = await fetch('/api/game/config');
+        const config = await response.json();
+        boardWidth = config.boardWidth;
+        boardHeight = config.boardHeight;
+        gameSpeed = config.speed;
+        tileSize = canvas.width / boardWidth;
+    }
+
+    async function fetchScore() {
+        const response = await fetch('/api/game/score');
+        const scoreData = await response.json();
+        score = scoreData.currentScore;
+        maxScore = scoreData.bestScore;
+        document.getElementById("score").innerText = "Score: " + score;
+        document.getElementById("max-score").innerText = "Best: " + maxScore;
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        snake.forEach(segment => {
+            ctx.fillStyle = "#00ff00";
+            ctx.fillRect(segment.x * tileSize, segment.y * tileSize, tileSize, tileSize);
+            ctx.strokeStyle = "#006600";
+            ctx.strokeRect(segment.x * tileSize, segment.y * tileSize, tileSize, tileSize);
+        });
+
+        ctx.fillStyle = "#ff3333";
+        ctx.fillRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
+    }
+
+    function moveSnake() {
+        const newHead = {x: snake[0].x + direction.x, y: snake[0].y + direction.y};
+
+        if (newHead.x < 0 || newHead.x >= boardWidth || newHead.y < 0 || newHead.y >= boardHeight || snake.some(segment => segment.x === newHead.x && segment.y === newHead.y)) {
+            gameOver();
+            return;
+        }
+
+        snake.unshift(newHead);
+
+        if (newHead.x === food.x && newHead.y === food.y) {
+            score++;
+            if (score > maxScore) {
+                maxScore = score;
+            }
+            document.getElementById("score").innerText = "Score: " + score;
+            document.getElementById("max-score").innerText = "Best: " + maxScore;
+            food = generateFood();
+            increaseSpeed();
+        } else {
+            snake.pop();
+        }
+
+        if (nextDirection) {
+            direction = nextDirection;
+            nextDirection = null;
+        }
+
+        keyPressed = false; // Allow key press after the snake has moved
+    }
+
+    function increaseSpeed() {
+        let newSpeed = gameSpeed * 0.95;
+        if (initialGameSpeed - newSpeed <= maxSpeedIncrease) {
+            gameSpeed = newSpeed;
+            clearInterval(gameInterval);
+            gameInterval = setInterval(() => {
+                moveSnake();
+                draw();
+            }, gameSpeed);
+        }
+    }
+
+    function gameOver() {
+        clearInterval(gameInterval);
+        document.getElementById("game-over").style.display = "block";
+        gameStarted = false;
+    }
+
+    async function startGame() {
+        direction = {x: 1, y: 0};
+        snake = [{x: 12, y: 12}, {x: 11, y: 12}, {x: 10, y: 12}];
+        food = generateFood();
+        score = 0;
+        document.getElementById("score").innerText = "Score: " + score;
+        document.getElementById("game-over").style.display = "none";
+        document.getElementById("game-start").style.display = "none";
+        gameSpeed = initialGameSpeed;
+        gameInterval = setInterval(() => {
+            moveSnake();
+            draw();
+        }, gameSpeed);
+        gameStarted = true; // Mark the game as started
+    }
+
+    function generateFood() {
+        let newFood;
+        do {
+            newFood = {
+                x: Math.floor(Math.random() * boardWidth),
+                y: Math.floor(Math.abs(Math.random() * boardHeight - 1))
+            };
+        } while (snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
+        return newFood;
+    }
+
+    let keyPressed = false;
+    document.addEventListener("keydown", e => {
+        if (!gameStarted && e.key === "Enter") {
+            startGame();
+        }
+
+        if (!keyPressed && gameStarted) {
+            keyPressed = true;
+            switch (e.key) {
+                case "ArrowUp":
+                    if (direction.y === 0) nextDirection = {x: 0, y: -1};
+                    break;
+                case "ArrowDown":
+                    if (direction.y === 0) nextDirection = {x: 0, y: 1};
+                    break;
+                case "ArrowLeft":
+                    if (direction.x === 0) nextDirection = {x: -1, y: 0};
+                    break;
+                case "ArrowRight":
+                    if (direction.x === 0) nextDirection = {x: 1, y: 0};
+                    break;
+            }
+        }
+    });
+
+    fetchConfig();
+    fetchScore();
+</script>
+</body>
+</html>
