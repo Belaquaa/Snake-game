@@ -34,16 +34,6 @@ public class Snake {
         return body.getFirst();
     }
 
-    private Point getNewHeadPosition() {
-        Point head = body.getFirst();
-        return switch (direction) {
-            case UP -> new Point(head.x(), head.y() - 1);
-            case DOWN -> new Point(head.x(), head.y() + 1);
-            case LEFT -> new Point(head.x() - 1, head.y());
-            case RIGHT -> new Point(head.x() + 1, head.y());
-        };
-    }
-
     public boolean checkCollision() {
         Point head = body.getFirst();
         for (int i = 1; i < body.size(); i++) {
@@ -52,5 +42,15 @@ public class Snake {
             }
         }
         return false;
+    }
+
+    private Point getNewHeadPosition() {
+        Point head = body.getFirst();
+        return switch (direction) {
+            case UP -> new Point(head.x(), head.y() - 1);
+            case DOWN -> new Point(head.x(), head.y() + 1);
+            case LEFT -> new Point(head.x() - 1, head.y());
+            case RIGHT -> new Point(head.x() + 1, head.y());
+        };
     }
 }

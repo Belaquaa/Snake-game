@@ -62,15 +62,7 @@ public class GameService {
         }
     }
 
-    private void generateApple() {
-        Point position;
-        do {
-            position = new Point(random.nextInt(boardWidth - 2) + 1, random.nextInt(boardHeight - 2) + 1);
-        } while (snake.getBody().contains(position));
-        apple = new Apple(position);
-    }
-
-    private boolean isOutOfBounds(Point point) {
+    public boolean isOutOfBounds(Point point) {
         return point.x() < 0 || point.x() >= boardWidth || point.y() < 0 || point.y() >= boardHeight;
     }
 
@@ -82,5 +74,13 @@ public class GameService {
             snake.grow();
             generateApple();
         }
+    }
+
+    private void generateApple() {
+        Point position;
+        do {
+            position = new Point(random.nextInt(boardWidth - 2) + 1, random.nextInt(boardHeight - 2) + 1);
+        } while (snake.getBody().contains(position));
+        apple = new Apple(position);
     }
 }
