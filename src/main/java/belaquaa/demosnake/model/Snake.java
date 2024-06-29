@@ -1,5 +1,6 @@
 package belaquaa.demosnake.model;
 
+import belaquaa.demosnake.configuration.Direction;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,14 +8,14 @@ import java.util.LinkedList;
 
 @Getter
 public class Snake {
-    private LinkedList<Point> body;
+    private final LinkedList<Point> body;
     @Setter
     private Direction direction;
 
     public Snake(Point initialPosition, int initialLength) {
         body = new LinkedList<>();
         for (int i = 0; i < initialLength; i++) {
-            body.add(new Point(initialPosition.getX() - i, initialPosition.getY()));
+            body.add(new Point(initialPosition.x() - i, initialPosition.y()));
         }
         direction = Direction.RIGHT;
     }
@@ -29,13 +30,17 @@ public class Snake {
         body.addFirst(getNewHeadPosition());
     }
 
+    public Point getHead() {
+        return body.getFirst();
+    }
+
     private Point getNewHeadPosition() {
         Point head = body.getFirst();
         return switch (direction) {
-            case UP -> new Point(head.getX(), head.getY() - 1);
-            case DOWN -> new Point(head.getX(), head.getY() + 1);
-            case LEFT -> new Point(head.getX() - 1, head.getY());
-            case RIGHT -> new Point(head.getX() + 1, head.getY());
+            case UP -> new Point(head.x(), head.y() - 1);
+            case DOWN -> new Point(head.x(), head.y() + 1);
+            case LEFT -> new Point(head.x() - 1, head.y());
+            case RIGHT -> new Point(head.x() + 1, head.y());
         };
     }
 

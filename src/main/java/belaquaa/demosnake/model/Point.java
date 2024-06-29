@@ -1,11 +1,4 @@
 package belaquaa.demosnake.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
-@Data
-@AllArgsConstructor
-public class Point {
-    private int x;
-    private int y;
+public record Point(int x, int y) {
 }

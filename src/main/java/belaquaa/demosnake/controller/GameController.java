@@ -1,10 +1,9 @@
 package belaquaa.demosnake.controller;
 
-
 import belaquaa.demosnake.configuration.GameConfig;
 import belaquaa.demosnake.configuration.GameState;
 import belaquaa.demosnake.configuration.Score;
-import belaquaa.demosnake.model.Direction;
+import belaquaa.demosnake.configuration.Direction;
 import belaquaa.demosnake.service.GameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

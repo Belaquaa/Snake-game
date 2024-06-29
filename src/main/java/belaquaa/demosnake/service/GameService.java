@@ -1,7 +1,7 @@
 package belaquaa.demosnake.service;
 
 import belaquaa.demosnake.model.Apple;
-import belaquaa.demosnake.model.Direction;
+import belaquaa.demosnake.configuration.Direction;
 import belaquaa.demosnake.model.Snake;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,49 +15,34 @@ import java.util.Random;
 public class GameService {
     private Snake snake;
     private Apple apple;
+    private final Direction direction = Direction.RIGHT;
     private final int boardWidth;
     private final int boardHeight;
     private final int initialLength;
-    private final int initialSpeed;
+    private final int speed;
     private final Random random = new Random();
-    private float speed;
     private int score;
     private int bestScore;
 
     public GameService(@Value("${game.board.width}") int boardWidth,
                        @Value("${game.board.height}") int boardHeight,
                        @Value("${game.snake.initialLength}") int initialLength,
-                       @Value("${game.initialSpeed}") int initialSpeed) {
+                       @Value("${game.speed}") int speed) {
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
         this.initialLength = initialLength;
-        this.initialSpeed = initialSpeed;
-        this.speed = initialSpeed;
+        this.speed = speed;
         resetGame();
     }
 
     public void resetGame() {
         snake = new Snake(new Point(boardWidth / 2, boardHeight / 2), initialLength);
-        generateApple();
+        apple = new Apple(new Point(boardWidth / 2 + boardWidth / 4, boardHeight / 2));
         score = 0;
-        speed = initialSpeed;
-    }
-
-    public void updateDirection(Direction direction) {
-        snake.setDirection(direction);
     }
 
     public boolean updateGame() {
-        snake.move();
-        if (snake.getBody().getFirst().equals(apple.getPosition())) {
-            score++;
-            if (score > bestScore) {
-                bestScore = score;
-            }
-            snake.grow();
-            generateApple();
-            increaseSpeed();
-        }
+        moveSnake();
         boolean collision = snake.checkCollision() || isOutOfBounds(snake.getBody().getFirst());
         if (collision) {
             resetGame();
@@ -65,22 +50,37 @@ public class GameService {
         return collision;
     }
 
+    public void updateDirection(Direction direction) {
+        Direction currentDirection = snake.getDirection();
+        boolean isOpposite = (direction == Direction.UP && currentDirection == Direction.DOWN) ||
+                (direction == Direction.DOWN && currentDirection == Direction.UP) ||
+                (direction == Direction.LEFT && currentDirection == Direction.RIGHT) ||
+                (direction == Direction.RIGHT && currentDirection == Direction.LEFT);
+
+        if (!isOpposite) {
+            snake.setDirection(direction);
+        }
+    }
+
     private void generateApple() {
         Point position;
         do {
-            position = new Point(random.nextInt(boardWidth), random.nextInt(boardHeight));
+            position = new Point(random.nextInt(boardWidth - 2) + 1, random.nextInt(boardHeight - 2) + 1);
         } while (snake.getBody().contains(position));
         apple = new Apple(position);
     }
 
     private boolean isOutOfBounds(Point point) {
-        return point.getX() < 0 || point.getX() >= boardWidth || point.getY() < 0 || point.getY() >= boardHeight;
+        return point.x() < 0 || point.x() >= boardWidth || point.y() < 0 || point.y() >= boardHeight;
     }
 
-    private void increaseSpeed() {
-        int maxSpeedIncrease = (int) (initialSpeed * 0.3);
-        if (initialSpeed - speed <= maxSpeedIncrease) {
-            speed *= 0.98F;
+    public void moveSnake() {
+        snake.move();
+        if (snake.getHead().equals(apple.position())) {
+            score++;
+            bestScore = Math.max(score, bestScore);
+            snake.grow();
+            generateApple();
         }
     }
 }

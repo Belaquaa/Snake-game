@@ -94,19 +94,15 @@
 <script>
     let canvas = document.getElementById("game-board-canvas");
     let ctx = canvas.getContext("2d");
-    let boardWidth = 24;
-    let boardHeight = 24;
-    let tileSize = canvas.width / boardWidth;
+    let boardWidth;
+    let boardHeight;
+    let tileSize;
+    let gameSpeed;
 
-    let direction = {x: 1, y: 0};
-    let snake = [];
-    let food = {};
-    let score = 0;
-    let maxScore = 0;
     let gameInterval;
-    let gameSpeed = 140;
-    const initialGameSpeed = gameSpeed;
     let gameStarted = false;
+    let currentDirection = 'RIGHT';
+    let canChangeDirection = true;
 
     async function fetchConfig() {
         const response = await fetch('/api/game/config');
@@ -120,41 +116,37 @@
     async function fetchScore() {
         const response = await fetch('/api/game/score');
         const scoreData = await response.json();
-        score = scoreData.currentScore;
-        maxScore = scoreData.bestScore;
-        document.getElementById("score").innerText = "Score: " + score;
-        document.getElementById("max-score").innerText = "Best: " + maxScore;
+        document.getElementById("score").innerText = "Score: " + scoreData.score;
+        document.getElementById("max-score").innerText = "Best: " + scoreData.bestScore;
     }
 
-    async function startGame() {
-        await fetch('/api/game/reset', {method: 'POST'});
+    async function resetGame() {
+        await fetch('/api/game/reset', { method: 'POST' });
         await fetchGameState();
-        document.getElementById("score").innerText = "Score: " + score;
-        document.getElementById("game-over").style.display = "none";
-        document.getElementById("game-start").style.display = "none";
-        gameInterval = setInterval(async () => {
-            const collision = await fetch('/api/game/update', {method: 'POST'}).then(res => res.json());
-            if (collision) {
-                gameOver();
-            } else {
-                await fetchGameState();
-                draw();
-            }
-        }, gameSpeed);
-        gameStarted = true;
+        await fetchScore();
+    }
+
+    async function updateGame() {
+        const response = await fetch('/api/game/update', { method: 'POST' });
+        const collision = await response.json();
+        if (collision) {
+            document.getElementById("game-over").style.display = "block";
+            document.getElementById("game-board").style.display = "none";
+            gameStarted = false;
+            clearInterval(gameInterval);
+        }
+        await fetchGameState();
+        await fetchScore();
+        draw();
+
+        canChangeDirection = true;
     }
 
     async function fetchGameState() {
         const response = await fetch('/api/game/state');
         const gameState = await response.json();
-        snake = gameState.snake.body.map(point => ({x: point.x, y: point.y}));
-        food = {x: gameState.apple.position.x, y: gameState.apple.position.y};
-        score = gameState.score;
-        document.getElementById("score").innerText = "Score: " + score;
-        if (score > maxScore) {
-            maxScore = score;
-            document.getElementById("max-score").innerText = "Best: " + maxScore;
-        }
+        snake = gameState.snake.body;
+        apple = gameState.apple.position;
     }
 
     function draw() {
@@ -168,68 +160,65 @@
         });
 
         ctx.fillStyle = "#ff3333";
-        ctx.fillRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
+        ctx.fillRect(apple.x * tileSize, apple.y * tileSize, tileSize, tileSize);
     }
 
-    function gameOver() {
-        clearInterval(gameInterval);
-        document.getElementById("game-over").style.display = "block";
-        gameStarted = false;
+    async function startGame() {
+        document.getElementById("score").innerText = "Score: 0";
+        document.getElementById("game-over").style.display = "none";
+        document.getElementById("game-start").style.display = "none";
+        document.getElementById("game-board").style.display = "block";
+        await resetGame();
+        gameStarted = true;
+        await fetch('/api/game/direction', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify('RIGHT')
+        });
+        currentDirection = 'RIGHT';
+        gameInterval = setInterval(updateGame, gameSpeed);
     }
 
     document.addEventListener("keydown", async e => {
         if (!gameStarted && e.key === "Enter") {
-            startGame();
+            await startGame();
         }
 
-        if (gameStarted) {
-            let directionChanged = false;
+        if (gameStarted && canChangeDirection) {
+            let newDirection;
             switch (e.key) {
                 case "ArrowUp":
-                    if (direction.y === 0) {
-                        direction = {x: 0, y: -1};
-                        directionChanged = true;
-                    }
+                    if (currentDirection !== 'DOWN') newDirection = 'UP';
                     break;
                 case "ArrowDown":
-                    if (direction.y === 0) {
-                        direction = {x: 0, y: 1};
-                        directionChanged = true;
-                    }
+                    if (currentDirection !== 'UP') newDirection = 'DOWN';
                     break;
                 case "ArrowLeft":
-                    if (direction.x === 0) {
-                        direction = {x: -1, y: 0};
-                        directionChanged = true;
-                    }
+                    if (currentDirection !== 'RIGHT') newDirection = 'LEFT';
                     break;
                 case "ArrowRight":
-                    if (direction.x === 0) {
-                        direction = {x: 1, y: 0};
-                        directionChanged = true;
-                    }
+                    if (currentDirection !== 'LEFT') newDirection = 'RIGHT';
                     break;
             }
-            if (directionChanged) {
+            if (newDirection && newDirection !== currentDirection) {
                 await fetch('/api/game/direction', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(directionToDirectionEnum(direction))
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newDirection)
                 });
+                currentDirection = newDirection;
+                canChangeDirection = false; // Prevent further direction changes until the next update
             }
         }
     });
 
-    function directionToDirectionEnum(direction) {
-        if (direction.x === 0 && direction.y === -1) return 'UP';
-        if (direction.x === 0 && direction.y === 1) return 'DOWN';
-        if (direction.x === -1 && direction.y === 0) return 'LEFT';
-        if (direction.x === 1 && direction.y === 0) return 'RIGHT';
-    }
-
     fetchConfig();
     fetchScore();
-</script>
 
+</script>
 </body>
 </html>
