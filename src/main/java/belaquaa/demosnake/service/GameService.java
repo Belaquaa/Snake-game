@@ -5,6 +5,7 @@ import belaquaa.demosnake.configuration.GameState;
 import belaquaa.demosnake.configuration.Score;
 import belaquaa.demosnake.model.Apple;
 import belaquaa.demosnake.enums.Direction;
+import belaquaa.demosnake.model.Obstacle;
 import belaquaa.demosnake.model.Snake;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
@@ -12,6 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import belaquaa.demosnake.model.Point;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 @Service
@@ -19,6 +22,7 @@ import java.util.Random;
 public class GameService {
     private Snake snake;
     private Apple apple;
+    private List<Obstacle> obstacles;
     private Direction direction = Direction.RIGHT;
 
     @Value("${board.width}")
@@ -33,6 +37,9 @@ public class GameService {
     @Value("${snake.initialSpeed}")
     private int initialSpeed;
 
+    @Value("${obstacle.numberOfObstacles}")
+    private int numberOfObstacles;
+
     private final Random random = new Random();
     private float speed;
     private int score;
@@ -45,18 +52,24 @@ public class GameService {
 
     public void resetGame() {
         snake = new Snake(new Point(boardWidth / 2, boardHeight / 2), initialLength);
-        apple = new Apple(new Point(boardWidth / 2 + boardWidth / 4, boardHeight / 2));
+        apple = new Apple(new Point(boardWidth / 2 + boardWidth / 4, boardHeight / 2), true);
+        generateObstacles();
         speed = initialSpeed;
         score = 0;
     }
 
     public boolean updateGame() {
         moveSnake();
-        boolean collision = snake.checkCollision() || isOutOfBounds(snake.getBody().getFirst());
+        boolean collision = snake.checkCollision() || isOutOfBounds(snake.getBody().getFirst()) || checkObstacleCollision();
         if (collision) {
             resetGame();
         }
         return collision;
+    }
+
+    public boolean checkObstacleCollision() {
+        Point head = snake.getHead();
+        return obstacles.stream().anyMatch(obstacle -> obstacle.getPosition().equals(head));
     }
 
     public void updateDirection(Direction direction) {
@@ -78,7 +91,12 @@ public class GameService {
     public void moveSnake() {
         snake.move();
         if (snake.getHead().equals(apple.position())) {
-            score++;
+            if (apple.isGolden()) {
+                score += 5;
+                speed *= 1.03F;
+            } else {
+                score++;
+            }
             bestScore = Math.max(score, bestScore);
             snake.grow();
             generateApple();
@@ -86,12 +104,31 @@ public class GameService {
         }
     }
 
+    private boolean isPositionOccupied(Point position) {
+        return snake.getBody().contains(position) ||
+                obstacles.stream().anyMatch(obstacle -> obstacle.getPosition().equals(position));
+    }
+
     private void generateApple() {
         Point position;
         do {
             position = new Point(random.nextInt(boardWidth - 2) + 1, random.nextInt(boardHeight - 2) + 1);
-        } while (snake.getBody().contains(position));
-        apple = new Apple(position);
+        } while (isPositionOccupied(position));
+
+        boolean isGolden = random.nextInt(10) == 1;  // 10% chance for a golden apple
+        apple = new Apple(position, isGolden);
+    }
+
+
+    private void generateObstacles() {
+        obstacles = new ArrayList<>();
+        for (int i = 0; i < numberOfObstacles; i++) {
+            Point position;
+            do {
+                position = new Point(random.nextInt(boardWidth - 2) + 1, random.nextInt(boardHeight - 2) + 1);
+            } while (snake.getBody().contains(position) || obstacles.contains(new Obstacle(position)));
+            obstacles.add(new Obstacle(position));
+        }
     }
 
     private void increaseSpeed() {
@@ -99,7 +136,7 @@ public class GameService {
     }
 
     public GameState getGameState() {
-        return new GameState(snake, apple);
+        return new GameState(snake, apple, obstacles);
     }
 
     public GameConfig getGameConfig() {

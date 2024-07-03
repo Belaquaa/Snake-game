@@ -98,6 +98,7 @@
     let boardHeight;
     let tileSize;
     let gameSpeed;
+    let obstacles;
 
     let gameInterval;
     let gameStarted = false;
@@ -161,6 +162,8 @@
         const gameState = await response.json();
         snake = gameState.snake.body;
         apple = gameState.apple.position;
+        isAppleGolden = gameState.apple.isGolden;
+        obstacles = gameState.obstacles.map(o => o.position);  // Препятствия
     }
 
     function draw() {
@@ -173,9 +176,15 @@
             ctx.strokeRect(segment.x * tileSize, segment.y * tileSize, tileSize, tileSize);
         });
 
-        ctx.fillStyle = "#ff3333";
+        ctx.fillStyle = isAppleGolden ? "#ffd700" : "#ff3333";
         ctx.fillRect(apple.x * tileSize, apple.y * tileSize, tileSize, tileSize);
+
+        obstacles.forEach(obstacle => {
+            ctx.fillStyle = "#8b4513";  // цвет препятствия
+            ctx.fillRect(obstacle.x * tileSize, obstacle.y * tileSize, tileSize, tileSize);
+        });
     }
+
 
     async function startGame() {
         document.getElementById("score").innerText = "Score: 0";
