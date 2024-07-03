@@ -3,7 +3,7 @@ package belaquaa.demosnake.controller;
 import belaquaa.demosnake.configuration.GameConfig;
 import belaquaa.demosnake.configuration.GameState;
 import belaquaa.demosnake.configuration.Score;
-import belaquaa.demosnake.configuration.Direction;
+import belaquaa.demosnake.enums.Direction;
 import belaquaa.demosnake.service.GameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,12 +20,12 @@ public class GameController {
 
     @GetMapping("/state")
     public GameState getGameState() {
-        return new GameState(gameService.getSnake(), gameService.getApple());
+        return gameService.getGameState();
     }
 
     @GetMapping("/config")
     public GameConfig getGameConfig() {
-        return new GameConfig(gameService.getBoardWidth(), gameService.getBoardHeight(), gameService.getSpeed());
+        return gameService.getGameConfig();
     }
 
     @GetMapping("/speed")
@@ -35,7 +35,7 @@ public class GameController {
 
     @GetMapping("/score")
     public Score getScore() {
-        return new Score(gameService.getScore(), gameService.getBestScore());
+        return gameService.getScore();
     }
 
     @PostMapping("/direction")

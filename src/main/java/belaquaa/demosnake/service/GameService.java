@@ -1,8 +1,12 @@
 package belaquaa.demosnake.service;
 
+import belaquaa.demosnake.configuration.GameConfig;
+import belaquaa.demosnake.configuration.GameState;
+import belaquaa.demosnake.configuration.Score;
 import belaquaa.demosnake.model.Apple;
-import belaquaa.demosnake.configuration.Direction;
+import belaquaa.demosnake.enums.Direction;
 import belaquaa.demosnake.model.Snake;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import belaquaa.demosnake.model.Point;
@@ -15,32 +19,35 @@ import java.util.Random;
 public class GameService {
     private Snake snake;
     private Apple apple;
-    private final Direction direction = Direction.RIGHT;
-    private final int boardWidth;
-    private final int boardHeight;
-    private final int initialLength;
-    private final int initialSpeed;
+    private Direction direction = Direction.RIGHT;
+
+    @Value("${board.width}")
+    private int boardWidth;
+
+    @Value("${board.height}")
+    private int boardHeight;
+
+    @Value("${snake.initialLength}")
+    private int initialLength;
+
+    @Value("${snake.initialSpeed}")
+    private int initialSpeed;
+
     private final Random random = new Random();
     private float speed;
     private int score;
     private int bestScore;
 
-    public GameService(@Value("${game.board.width}") int boardWidth,
-                       @Value("${game.board.height}") int boardHeight,
-                       @Value("${game.snake.initialLength}") int initialLength,
-                       @Value("${game.speed}") int initialSpeed) {
-        this.boardWidth = boardWidth;
-        this.boardHeight = boardHeight;
-        this.initialLength = initialLength;
-        this.initialSpeed = initialSpeed;
+    @PostConstruct
+    public void init() {
         resetGame();
     }
 
     public void resetGame() {
         snake = new Snake(new Point(boardWidth / 2, boardHeight / 2), initialLength);
         apple = new Apple(new Point(boardWidth / 2 + boardWidth / 4, boardHeight / 2));
-        score = 0;
         speed = initialSpeed;
+        score = 0;
     }
 
     public boolean updateGame() {
@@ -89,5 +96,17 @@ public class GameService {
 
     private void increaseSpeed() {
         speed *= 0.99F;
+    }
+
+    public GameState getGameState() {
+        return new GameState(snake, apple);
+    }
+
+    public GameConfig getGameConfig() {
+        return new GameConfig(boardWidth, boardHeight, speed);
+    }
+
+    public Score getScore() {
+        return new Score(score, bestScore);
     }
 }

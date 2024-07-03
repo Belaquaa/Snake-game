@@ -1,6 +1,6 @@
 package belaquaa.demosnake.model;
 
-import belaquaa.demosnake.configuration.Direction;
+import belaquaa.demosnake.enums.Direction;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,7 +27,10 @@ public class Snake {
     }
 
     public void grow() {
-        body.addFirst(getNewHeadPosition());
+        Point tail = body.getLast();
+        Point newHead = getNewHeadPosition();
+        body.addFirst(newHead);
+        body.addLast(tail);
     }
 
     public Point getHead() {

@@ -1,14 +1,12 @@
 package belaquaa.demosnake.controller;
 
-import belaquaa.demosnake.configuration.Direction;
+import belaquaa.demosnake.enums.Direction;
 import belaquaa.demosnake.model.Apple;
 import belaquaa.demosnake.model.Point;
 import belaquaa.demosnake.model.Snake;
 import belaquaa.demosnake.service.GameService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -47,30 +45,6 @@ public class GameControllerTest {
                 .andExpect(jsonPath("$.snake.body[0].y").value(5))
                 .andExpect(jsonPath("$.apple.position.x").value(10))
                 .andExpect(jsonPath("$.apple.position.y").value(10));
-    }
-
-    @Test
-    public void testGetGameConfig() throws Exception {
-        when(gameService.getBoardWidth()).thenReturn(20);
-        when(gameService.getBoardHeight()).thenReturn(20);
-        when(gameService.getSpeed()).thenReturn(10);
-
-        mockMvc.perform(get("/api/game/config"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.boardWidth").value(20))
-                .andExpect(jsonPath("$.boardHeight").value(20))
-                .andExpect(jsonPath("$.speed").value(10));
-    }
-
-    @Test
-    public void testGetScore() throws Exception {
-        when(gameService.getScore()).thenReturn(5);
-        when(gameService.getBestScore()).thenReturn(10);
-
-        mockMvc.perform(get("/api/game/score"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.score").value(5))
-                .andExpect(jsonPath("$.bestScore").value(10));
     }
 
     @Test

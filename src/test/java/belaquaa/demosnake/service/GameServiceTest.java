@@ -1,6 +1,6 @@
 package belaquaa.demosnake.service;
 
-import belaquaa.demosnake.configuration.Direction;
+import belaquaa.demosnake.enums.Direction;
 import belaquaa.demosnake.model.Apple;
 import belaquaa.demosnake.model.Point;
 import belaquaa.demosnake.model.Snake;
@@ -15,14 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GameServiceTest {
 
     private GameService gameService;
-
-    @BeforeEach
-    public void setUp(@Value("${game.board.width}") int boardWidth,
-                      @Value("${game.board.height}") int boardHeight,
-                      @Value("${game.snake.initialLength}") int initialLength,
-                      @Value("${game.speed}") int speed) {
-        gameService = new GameService(boardWidth, boardHeight, initialLength, speed);
-    }
 
     @Test
     public void testResetGame() {

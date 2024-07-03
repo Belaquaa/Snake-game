@@ -1,5 +1,6 @@
 package belaquaa.demosnake.configuration;
 
+import belaquaa.demosnake.enums.Direction;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
