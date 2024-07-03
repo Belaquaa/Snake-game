@@ -120,10 +120,17 @@
         document.getElementById("max-score").innerText = "Best: " + scoreData.bestScore;
     }
 
+    async function fetchCurrentSpeed() {
+        const response = await fetch('/api/game/speed');
+        gameSpeed = await response.json();
+    }
+
     async function resetGame() {
         await fetch('/api/game/reset', { method: 'POST' });
         await fetchGameState();
         await fetchScore();
+        await fetchCurrentSpeed();
+        resetInterval();
     }
 
     async function updateGame() {
@@ -137,9 +144,16 @@
         }
         await fetchGameState();
         await fetchScore();
+        await fetchCurrentSpeed();
+        resetInterval();
         draw();
 
         canChangeDirection = true;
+    }
+
+    function resetInterval() {
+        clearInterval(gameInterval);
+        gameInterval = setInterval(updateGame, gameSpeed);
     }
 
     async function fetchGameState() {
@@ -178,7 +192,7 @@
             body: JSON.stringify('RIGHT')
         });
         currentDirection = 'RIGHT';
-        gameInterval = setInterval(updateGame, gameSpeed);
+        resetInterval();
     }
 
     document.addEventListener("keydown", async e => {

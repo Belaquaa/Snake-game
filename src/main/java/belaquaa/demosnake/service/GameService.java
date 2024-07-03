@@ -19,19 +19,20 @@ public class GameService {
     private final int boardWidth;
     private final int boardHeight;
     private final int initialLength;
-    private final int speed;
+    private final int initialSpeed;
     private final Random random = new Random();
+    private float speed;
     private int score;
     private int bestScore;
 
     public GameService(@Value("${game.board.width}") int boardWidth,
                        @Value("${game.board.height}") int boardHeight,
                        @Value("${game.snake.initialLength}") int initialLength,
-                       @Value("${game.speed}") int speed) {
+                       @Value("${game.speed}") int initialSpeed) {
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
         this.initialLength = initialLength;
-        this.speed = speed;
+        this.initialSpeed = initialSpeed;
         resetGame();
     }
 
@@ -39,6 +40,7 @@ public class GameService {
         snake = new Snake(new Point(boardWidth / 2, boardHeight / 2), initialLength);
         apple = new Apple(new Point(boardWidth / 2 + boardWidth / 4, boardHeight / 2));
         score = 0;
+        speed = initialSpeed;
     }
 
     public boolean updateGame() {
@@ -73,6 +75,7 @@ public class GameService {
             bestScore = Math.max(score, bestScore);
             snake.grow();
             generateApple();
+            increaseSpeed();
         }
     }
 
@@ -82,5 +85,9 @@ public class GameService {
             position = new Point(random.nextInt(boardWidth - 2) + 1, random.nextInt(boardHeight - 2) + 1);
         } while (snake.getBody().contains(position));
         apple = new Apple(position);
+    }
+
+    private void increaseSpeed() {
+        speed *= 0.99F;
     }
 }

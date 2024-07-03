@@ -28,6 +28,11 @@ public class GameController {
         return new GameConfig(gameService.getBoardWidth(), gameService.getBoardHeight(), gameService.getSpeed());
     }
 
+    @GetMapping("/speed")
+    public float getCurrentSpeed() {
+        return gameService.getSpeed();
+    }
+
     @GetMapping("/score")
     public Score getScore() {
         return new Score(gameService.getScore(), gameService.getBestScore());
