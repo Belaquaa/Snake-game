@@ -205,23 +205,27 @@
     }
 
     document.addEventListener("keydown", async e => {
-        if (!gameStarted && e.key === "Enter") {
+        if (!gameStarted && e.code === "Enter") {
             await startGame();
         }
 
         if (gameStarted && canChangeDirection) {
             let newDirection;
-            switch (e.key) {
+            switch (e.code) {
                 case "ArrowUp":
+                case "KeyW":
                     if (currentDirection !== 'DOWN') newDirection = 'UP';
                     break;
                 case "ArrowDown":
+                case "KeyS":
                     if (currentDirection !== 'UP') newDirection = 'DOWN';
                     break;
                 case "ArrowLeft":
+                case "KeyA":
                     if (currentDirection !== 'RIGHT') newDirection = 'LEFT';
                     break;
                 case "ArrowRight":
+                case "KeyD":
                     if (currentDirection !== 'LEFT') newDirection = 'RIGHT';
                     break;
             }
@@ -238,6 +242,7 @@
             }
         }
     });
+
 
     fetchConfig();
     fetchScore();
