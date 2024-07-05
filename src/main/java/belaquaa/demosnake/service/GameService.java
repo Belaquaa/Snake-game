@@ -52,7 +52,7 @@ public class GameService {
 
     public void resetGame() {
         snake = new Snake(new Point(boardWidth / 2, boardHeight / 2), initialLength);
-        apple = new Apple(new Point(boardWidth / 2 + boardWidth / 4, boardHeight / 2), true);
+        apple = new Apple(new Point(boardWidth / 2 + Math.min(boardWidth / 4, 3), boardHeight / 2), true);
         generateObstacles();
         speed = initialSpeed;
         score = 0;
@@ -69,7 +69,7 @@ public class GameService {
 
     public boolean checkObstacleCollision() {
         Point head = snake.getHead();
-        return obstacles.stream().anyMatch(obstacle -> obstacle.getPosition().equals(head));
+        return obstacles.stream().anyMatch(obstacle -> obstacle.position().equals(head));
     }
 
     public void updateDirection(Direction direction) {
@@ -106,7 +106,7 @@ public class GameService {
 
     private boolean isPositionOccupied(Point position) {
         return snake.getBody().contains(position) ||
-                obstacles.stream().anyMatch(obstacle -> obstacle.getPosition().equals(position));
+                obstacles.stream().anyMatch(obstacle -> obstacle.position().equals(position));
     }
 
     private void generateApple() {
@@ -115,7 +115,7 @@ public class GameService {
             position = new Point(random.nextInt(boardWidth - 2) + 1, random.nextInt(boardHeight - 2) + 1);
         } while (isPositionOccupied(position));
 
-        boolean isGolden = random.nextInt(10) == 1;  // 10% chance for a golden apple
+        boolean isGolden = random.nextInt(10) == 1;
         apple = new Apple(position, isGolden);
     }
 
