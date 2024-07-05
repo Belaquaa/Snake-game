@@ -60,16 +60,16 @@ public class GameService {
 
     public boolean updateGame() {
         moveSnake();
-        boolean collision = snake.checkCollision() || isOutOfBounds(snake.getBody().getFirst()) || checkObstacleCollision();
-        if (collision) {
+        if (snake.checkCollision() || isOutOfBounds(snake.getHead()) || checkObstacleCollision()) {
             resetGame();
+            return true;
         }
-        return collision;
+        return false;
     }
 
     public boolean checkObstacleCollision() {
         Point head = snake.getHead();
-        return obstacles.stream().anyMatch(obstacle -> obstacle.position().equals(head));
+        return obstacles != null && obstacles.stream().anyMatch(obstacle -> obstacle.position().equals(head));
     }
 
     public void updateDirection(Direction direction) {
@@ -91,23 +91,19 @@ public class GameService {
     public void moveSnake() {
         snake.move();
         if (snake.getHead().equals(apple.position())) {
-            if (apple.isGolden()) {
-                score += 5;
-                speed *= 1.03F;
-            } else {
-                score++;
-            }
+            score += apple.isGolden() ? 5 : 1;
             bestScore = Math.max(score, bestScore);
+            speed *= apple.isGolden() ? 1.03F : 0.99F;
             snake.grow();
             generateApple();
-            increaseSpeed();
         }
     }
 
     private boolean isPositionOccupied(Point position) {
         return snake.getBody().contains(position) ||
-                obstacles.stream().anyMatch(obstacle -> obstacle.position().equals(position));
+                (obstacles != null && obstacles.stream().anyMatch(obstacle -> obstacle.position().equals(position)));
     }
+
 
     private void generateApple() {
         Point position;
@@ -115,8 +111,7 @@ public class GameService {
             position = new Point(random.nextInt(boardWidth - 2) + 1, random.nextInt(boardHeight - 2) + 1);
         } while (isPositionOccupied(position));
 
-        boolean isGolden = random.nextInt(10) == 1;
-        apple = new Apple(position, isGolden);
+        apple = new Apple(position, random.nextInt(10) == 1);
     }
 
 
@@ -126,13 +121,9 @@ public class GameService {
             Point position;
             do {
                 position = new Point(random.nextInt(boardWidth - 2) + 1, random.nextInt(boardHeight - 2) + 1);
-            } while (snake.getBody().contains(position) || obstacles.contains(new Obstacle(position)));
+            } while (isPositionOccupied(position));
             obstacles.add(new Obstacle(position));
         }
-    }
-
-    private void increaseSpeed() {
-        speed *= 0.99F;
     }
 
     public GameState getGameState() {

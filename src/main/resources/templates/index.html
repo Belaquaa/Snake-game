@@ -163,7 +163,7 @@
         snake = gameState.snake.body;
         apple = gameState.apple.position;
         isAppleGolden = gameState.apple.isGolden;
-        obstacles = gameState.obstacles.map(o => o.position);  // Препятствия
+        obstacles = gameState.obstacles.map(o => o.position);
     }
 
     function draw() {
@@ -180,7 +180,7 @@
         ctx.fillRect(apple.x * tileSize, apple.y * tileSize, tileSize, tileSize);
 
         obstacles.forEach(obstacle => {
-            ctx.fillStyle = "#8b4513";  // цвет препятствия
+            ctx.fillStyle = "#8b4513";
             ctx.fillRect(obstacle.x * tileSize, obstacle.y * tileSize, tileSize, tileSize);
         });
     }
