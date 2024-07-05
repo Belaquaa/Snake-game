@@ -21,16 +21,12 @@ public class Snake {
     }
 
     public void move() {
-        Point newHead = getNewHeadPosition();
-        body.addFirst(newHead);
+        body.addFirst(getNewHeadPosition());
         body.removeLast();
     }
 
     public void grow() {
-        Point tail = body.getLast();
-        Point newHead = getNewHeadPosition();
-        body.addFirst(newHead);
-        body.addLast(tail);
+        body.addFirst(getNewHeadPosition());
     }
 
     public Point getHead() {
@@ -38,17 +34,12 @@ public class Snake {
     }
 
     public boolean checkCollision() {
-        Point head = body.getFirst();
-        for (int i = 1; i < body.size(); i++) {
-            if (head.equals(body.get(i))) {
-                return true;
-            }
-        }
-        return false;
+        Point head = getHead();
+        return body.stream().skip(1).anyMatch(head::equals);
     }
 
     private Point getNewHeadPosition() {
-        Point head = body.getFirst();
+        Point head = getHead();
         return switch (direction) {
             case UP -> new Point(head.x(), head.y() - 1);
             case DOWN -> new Point(head.x(), head.y() + 1);
